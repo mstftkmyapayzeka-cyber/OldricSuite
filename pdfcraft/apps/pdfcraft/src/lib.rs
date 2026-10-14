@@ -729,9 +729,11 @@ fn pick_adapter(adapters: &[(u32, u32, eframe::wgpu::DeviceType)], displays: &[D
 mod tests {
     use pdfcraft_ui_egui::control::Endpoint;
 
-    /// Cargo.lock: PdfCraft's own, or the workspace's when PdfCraft is part of Oldric Suite.
+    /// Cargo.lock: PdfCraft's own, or the workspace's when PdfCraft is part of Oldric Suite, with
+    /// Windows line endings (a checkout that converted them) read as `\n`.
     fn workspace_lock(root: &std::path::Path) -> String {
-        std::fs::read_to_string(root.join("Cargo.lock")).or_else(|_| std::fs::read_to_string(root.join("../Cargo.lock"))).unwrap()
+        let lock = std::fs::read_to_string(root.join("Cargo.lock")).or_else(|_| std::fs::read_to_string(root.join("../Cargo.lock"))).unwrap();
+        lock.replace("\r\n", "\n")
     }
 
     fn endpoint() -> std::io::Result<Endpoint> {
