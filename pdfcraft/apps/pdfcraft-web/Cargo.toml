@@ -1,7 +1,7 @@
 [package]
 name = "pdfcraft-web"
 description = "PdfCraft in the browser (wasm32; build with `trunk build --release` in this directory)"
-version.workspace = true
+version = "0.7.1"
 edition.workspace = true
 license.workspace = true
 publish = false

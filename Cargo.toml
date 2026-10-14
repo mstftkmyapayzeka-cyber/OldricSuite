@@ -1,0 +1,157 @@
+# Oldric Suite: WordCraft (word processor) and PdfCraft (PDF editor) in one workspace and one app.
+#
+# `wordcraft/` and `pdfcraft/` are the two original projects, kept whole (their docs, assets,
+# tests and tools still live there); `apps/oldric` is the app that runs both in one window.
+[workspace]
+resolver = "3"
+members = [
+    "apps/*",
+    "wordcraft/crates/*",
+    "wordcraft/apps/*",
+    "wordcraft/xtask",
+    "pdfcraft/crates/*",
+    "pdfcraft/apps/*",
+    "pdfcraft/xtask",
+]
+# PdfCraft's patched copies of upstream crates ([patch.crates-io] below) aren't members.
+exclude = ["pdfcraft/vendor"]
+default-members = ["apps/oldric", "wordcraft/apps/wordcraft", "pdfcraft/apps/pdfcraft"]
+
+# Each project keeps its own version, minimum Rust and repository (spelled out in its crates).
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+rust-version = "1.95"
+
+[workspace.dependencies]
+# wordcraft
+wordcraft-geom = { path = "wordcraft/crates/geom" }
+wordcraft-doc = { path = "wordcraft/crates/doc" }
+wordcraft-fonts = { path = "wordcraft/crates/fonts" }
+wordcraft-layout = { path = "wordcraft/crates/layout" }
+wordcraft-docx = { path = "wordcraft/crates/docx" }
+wordcraft-docbin = { path = "wordcraft/crates/docbin" }
+wordcraft-formats = { path = "wordcraft/crates/formats" }
+wordcraft-render = { path = "wordcraft/crates/render" }
+wordcraft-pdf = { path = "wordcraft/crates/pdf" }
+wordcraft-proof = { path = "wordcraft/crates/proof" }
+wordcraft-engine = { path = "wordcraft/crates/engine" }
+wordcraft-mcp = { path = "wordcraft/crates/mcp" }
+wordcraft-zotero = { path = "wordcraft/crates/zotero" }
+wordcraft-control-key = { path = "wordcraft/crates/control-key" }
+wordcraft-ui-egui = { path = "wordcraft/crates/ui-egui" }
+wordcraft-metafile = { path = "wordcraft/crates/metafile" }
+kurbo = { version = "0.13", features = ["serde"] }
+thiserror = "2"
+serde = { version = "1", features = ["derive", "rc"] }
+serde_json = { version = "1", features = ["float_roundtrip"] }
+log = "0.4"
+proptest = "1"
+rayon = "1"
+unicode-bidi = "0.3"
+unicode-segmentation = "1"
+unicode-linebreak = "0.1"
+unicode-script = "0.5"
+regex = { version = "1", default-features = false, features = ["std", "unicode", "perf"] }
+regex-automata = { version = "0.4", default-features = false, features = ["std", "syntax", "meta", "nfa-pikevm", "unicode"] }
+skrifa = "0.47"
+harfrust = "0.13"
+wuff = "0.2.9"
+vello_cpu = "0.2"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif", "bmp", "tiff"] }
+krilla = { version = "0.8", features = ["pdf"] }
+quick-xml = "0.41"
+zip = { version = "3", default-features = false, features = ["deflate"] }
+miniz_oxide = "0.8"
+cfb = "0.15"
+aes = "0.9"
+sha1 = "0.11"
+sha2 = "0.11"
+hmac = "0.13"
+base64 = "0.22"
+getrandom = "0.3"
+zeroize = "1"
+egui = "0.36"
+egui_extras = { version = "0.36", default-features = false, features = ["svg"] }
+eframe = { version = "0.36", default-features = false }
+egui_kittest = "0.36"
+rfd = "0.17"
+arboard = { version = "3.6", default-features = false, features = ["wayland-data-control"] }
+# pdfcraft
+craft-ui = { git = "https://github.com/storytold/craft-libs", version = "0.1.0", rev = "5c874d51eeb3de70e735c8ce87a59a7dedd47675", features = ["serde"] }
+craft-print = { git = "https://github.com/storytold/craft-libs", version = "0.1.0", rev = "d991bf6792f8ade99c51358bf3c1d902c8cd96b5" }
+pdfcraft-geom = { version = "0.7.0", path = "pdfcraft/crates/geom" }
+pdfcraft-filters = { version = "0.7.0", path = "pdfcraft/crates/filters" }
+pdfcraft-cos = { version = "0.7.0", path = "pdfcraft/crates/cos" }
+pdfcraft-crypt = { version = "0.7.0", path = "pdfcraft/crates/crypt" }
+pdfcraft-organize = { version = "0.7.0", path = "pdfcraft/crates/organize" }
+pdfcraft-measure = { version = "0.7.0", path = "pdfcraft/crates/measure" }
+pdfcraft-annot = { version = "0.7.0", path = "pdfcraft/crates/annot" }
+pdfcraft-audit = { version = "0.7.0", path = "pdfcraft/crates/audit" }
+pdfcraft-fonts = { version = "0.7.0", path = "pdfcraft/crates/fonts" }
+pdfcraft-model = { version = "0.7.0", path = "pdfcraft/crates/model" }
+pdfcraft-content = { version = "0.7.0", path = "pdfcraft/crates/content" }
+pdfcraft-redact = { version = "0.7.0", path = "pdfcraft/crates/redact" }
+pdfcraft-print = { version = "0.7.0", path = "pdfcraft/crates/print" }
+pdfcraft-xfdf = { version = "0.7.0", path = "pdfcraft/crates/xfdf" }
+pdfcraft-sign = { version = "0.7.0", path = "pdfcraft/crates/sign" }
+pdfcraft-optimize = { version = "0.7.0", path = "pdfcraft/crates/optimize" }
+pdfcraft-a11y = { version = "0.7.0", path = "pdfcraft/crates/a11y" }
+pdfcraft-ocr = { version = "0.7.0", path = "pdfcraft/crates/ocr" }
+pdfcraft-js = { version = "0.7.0", path = "pdfcraft/crates/js" }
+pdfcraft-compare = { version = "0.7.0", path = "pdfcraft/crates/compare" }
+pdfcraft-preflight = { version = "0.7.0", path = "pdfcraft/crates/preflight" }
+pdfcraft-export = { version = "0.7.0", path = "pdfcraft/crates/export" }
+pdfcraft-edit = { version = "0.7.0", path = "pdfcraft/crates/edit" }
+pdfcraft-create = { version = "0.7.0", path = "pdfcraft/crates/create" }
+pdfcraft-forms = { version = "0.7.0", path = "pdfcraft/crates/forms" }
+pdfcraft-xfa = { version = "0.7.0", path = "pdfcraft/crates/xfa" }
+pdfcraft-render = { version = "0.7.0", path = "pdfcraft/crates/render" }
+pdfcraft-engine = { version = "0.7.0", path = "pdfcraft/crates/engine" }
+pdfcraft-platform = { version = "0.7.0", path = "pdfcraft/crates/platform" }
+pdfcraft-ui-egui = { version = "0.7.0", path = "pdfcraft/crates/ui-egui" }
+pdfcraft-automation = { version = "0.7.0", path = "pdfcraft/crates/automation", default-features = false }
+hayro = "0.7.1"
+hayro-syntax = "0.7.2"
+lopdf = "0.45"
+flate2 = { version = "1.1", default-features = false, features = ["rust_backend"] }
+weezl = "0.2"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+dbg_macro = "warn"
+todo = "warn"
+too_many_arguments = "allow"
+type_complexity = "allow"
+
+[profile.dev.package."*"]
+opt-level = 2
+debug = "line-tables-only"
+
+[profile.dev]
+opt-level = 1
+
+[profile.low-disk]
+inherits = "dev"
+debug = "line-tables-only"
+incremental = false
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+debug = 0
+
+# PdfCraft's fixes to upstream crates (pdfcraft/vendor/README.md). WordCraft uses the same
+# versions of these crates, so both get the fixes.
+[patch.crates-io]
+hayro-interpret = { path = "pdfcraft/vendor/hayro-interpret" }
+hayro = { path = "pdfcraft/vendor/hayro" }
+hayro-syntax = { path = "pdfcraft/vendor/hayro-syntax" }
+hayro-jbig2 = { path = "pdfcraft/vendor/hayro-jbig2" }
+lopdf = { path = "pdfcraft/vendor/lopdf" }
+winit = { path = "pdfcraft/vendor/winit" }
+egui-wgpu = { path = "pdfcraft/vendor/egui-wgpu" }

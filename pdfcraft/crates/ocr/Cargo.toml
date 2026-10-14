@@ -1,11 +1,11 @@
 [package]
 name = "pdfcraft-ocr"
 description = "Scan & OCR: recognise text in page images (ocrs) and write it as an invisible, searchable text layer"
-version.workspace = true
+version = "0.7.1"
 edition.workspace = true
 license.workspace = true
-rust-version.workspace = true
-repository.workspace = true
+rust-version = "1.95"
+repository = "https://github.com/storytold/pdfcraft"
 
 [lints]
 workspace = true

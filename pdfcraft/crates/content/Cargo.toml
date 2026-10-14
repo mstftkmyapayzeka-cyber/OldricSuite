@@ -1,7 +1,7 @@
 [package]
 name = "pdfcraft-content"
 description = "Content streams (ISO 32000-2 §7.8, §8–9): operators with source spans, inline images, serializer, matrices"
-version.workspace = true
+version = "0.7.1"
 edition.workspace = true
 license.workspace = true
 

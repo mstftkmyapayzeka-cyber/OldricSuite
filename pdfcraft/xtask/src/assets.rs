@@ -197,7 +197,11 @@ fn repo_files(root: &Path) -> Result<Vec<String>> {
 }
 
 fn cargo_lock_versions(root: &Path) -> Result<BTreeSet<(String, String)>> {
-    let text = std::fs::read_to_string(root.join("Cargo.lock")).context("reading Cargo.lock")?;
+    // PdfCraft's own lock file, or the workspace's one level up when PdfCraft is part of a larger
+    // workspace (Oldric Suite).
+    let text = std::fs::read_to_string(root.join("Cargo.lock"))
+        .or_else(|_| std::fs::read_to_string(root.join("../Cargo.lock")))
+        .context("reading Cargo.lock")?;
     let mut out = BTreeSet::new();
     let mut name = None;
     for line in text.lines() {
@@ -457,7 +461,7 @@ mod tests {
             author: author.into(),
             source: "s".into(),
             licence: licence.into(),
-            licence_file: "Cargo.toml".into(),
+            licence_file: "LICENSE-MIT".into(),
             kind: kind.into(),
             usage: "u".into(),
             sha256: sha256_hex(&std::fs::read(root().join(path)).unwrap_or_default()),
@@ -586,7 +590,7 @@ mod tests {
         assert!(check(&root(), &m, &[], &l).is_empty(), "{:?}", check(&root(), &m, &[], &l));
 
         // Any other first-party file claiming it is refused.
-        let mut sneaky = asset("Cargo.toml", "Adobe", "data", "MIT");
+        let mut sneaky = asset("README.md", "Adobe", "data", "MIT");
         sneaky.adobe_data = true;
         let m = Manifest { asset: vec![sneaky], ..Default::default() };
         assert!(check(&root(), &m, &[], &l).iter().any(|p| p.contains("closed list")));

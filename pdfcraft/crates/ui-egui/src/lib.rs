@@ -396,6 +396,10 @@ pub type HostSaveFn = Box<dyn Fn(&str, &[u8], bool) -> Result<(), String>>;
 /// Told every frame whether any tab has unsaved work, so a host page can warn before leaving.
 pub type HostDirtyFn = Box<dyn FnMut(bool)>;
 
+/// Opens a Word document in the WordCraft that shares PdfCraft's window (Oldric Suite); see
+/// [`PdfCraftApp::word_host`].
+pub type WordHostFn = Box<dyn Fn(&std::path::Path) -> Result<(), String>>;
+
 pub struct PasswordPrompt {
     pub name: String,
     pub path: Option<String>,
@@ -544,6 +548,9 @@ pub struct PdfCraftApp {
     /// Lists the Print dialog's printers in the background (the desktop app sets it; see
     /// [`PrinterSource`]).
     pub printer_source: Option<PrinterSource>,
+    /// File ▸ Edit in WordCraft hands the Word document to this when PdfCraft runs inside Oldric
+    /// Suite, next to WordCraft in the same window; without it WordCraft is started as an app.
+    pub word_host: Option<WordHostFn>,
     // A browser has no background print work: the type is empty there.
     #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     pub(crate) print_tasks: print_ui::PrintTasks,
@@ -901,6 +908,7 @@ impl PdfCraftApp {
             update_source: None,
             updates: updates::Updates::default(),
             printer_source: None,
+            word_host: None,
             print_tasks: print_ui::PrintTasks::default(),
             palette_open: false,
             palette_query: String::new(),

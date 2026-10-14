@@ -1,7 +1,7 @@
 [package]
 name = "pdfcraft-edit"
 description = "Page content editing: headers and footers, watermarks, backgrounds, Bates numbers (ISO 32000-2 §14.8)"
-version.workspace = true
+version = "0.7.1"
 edition.workspace = true
 license.workspace = true
 

@@ -54,9 +54,27 @@ pub(crate) fn poll(app: &mut WordApp, ctx: &egui::Context) {
         return;
     }
     app.pdf_sync.changed_at = None;
+    write(app);
+}
+
+fn write(app: &mut WordApp) {
     if let Err(e) = app.session.run("file.updatePdf", &json!({})) {
         log::warn!("updating the linked PDF: {e}");
         app.status(i18n::fmt(tl!("The linked PDF wasn't updated: {error}"), &[("error", &e.to_string())]));
+    }
+}
+
+impl WordApp {
+    /// Write the linked PDF now if the document changed since it was last written, without
+    /// waiting for the pause: Oldric Suite calls this as it switches from WordCraft to the
+    /// PdfCraft beside it, which then shows every edit.
+    pub fn flush_pdf_link(&mut self) {
+        let rev = self.session.rev();
+        if self.session.pdf_link.is_none() || (self.pdf_sync.changed_at.is_none() && self.pdf_sync.rev == rev) {
+            return;
+        }
+        self.pdf_sync = PdfSync { rev, changed_at: None };
+        write(self);
     }
 }
 
@@ -84,6 +102,38 @@ mod tests {
         app.pdf_sync.changed_at = Some(crate::now_ms() - super::IDLE_MS - 1.0);
         super::poll(&mut app, &ctx);
         assert!(std::fs::read(&pdf).unwrap().starts_with(b"%PDF"));
+        assert!(app.pdf_sync.changed_at.is_none());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn switching_to_pdfcraft_writes_pending_edits_at_once() {
+        let dir = std::env::temp_dir().join(format!("wc-pdf-flush-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let pdf = dir.join("Flush.pdf");
+        let mut app = WordApp::new(wordcraft_engine::Session::new(wordcraft_engine::sample::sample_document()), Services::default());
+        let ctx = egui::Context::default();
+        // Unlinked: nothing to write.
+        app.flush_pdf_link();
+        assert!(!pdf.exists());
+        app.session.run("file.pdfSync", &json!({"value": true, "path": pdf.to_string_lossy()})).unwrap();
+        super::poll(&mut app, &ctx);
+        app.flush_pdf_link();
+        // Up to date: left alone.
+        std::fs::write(&pdf, b"stale").unwrap();
+        app.flush_pdf_link();
+        assert_eq!(std::fs::read(&pdf).unwrap(), b"stale");
+        // Typed just now, still inside the pause: written at once.
+        app.session.run("text.insert", &json!({"text": "More "})).unwrap();
+        super::poll(&mut app, &ctx);
+        app.flush_pdf_link();
+        assert!(std::fs::read(&pdf).unwrap().starts_with(b"%PDF"));
+        // An edit the poll hasn't seen yet counts too.
+        std::fs::write(&pdf, b"stale").unwrap();
+        app.session.run("text.insert", &json!({"text": "Again "})).unwrap();
+        app.flush_pdf_link();
+        assert!(std::fs::read(&pdf).unwrap().starts_with(b"%PDF"));
+        // And the timer has nothing left to do.
         assert!(app.pdf_sync.changed_at.is_none());
         let _ = std::fs::remove_dir_all(&dir);
     }

@@ -1,6 +1,6 @@
 [package]
 name = "wordcraft"
-version.workspace = true
+version = "0.6.1"
 edition.workspace = true
 license.workspace = true
 publish = false
@@ -19,7 +19,9 @@ wordcraft-fonts = { workspace = true }
 wordcraft-ui-egui = { workspace = true }
 # The control key file's location (shared with the MCP bridge).
 wordcraft-control-key = { workspace = true }
-eframe = { workspace = true, features = ["default_fonts", "wgpu", "accesskit", "wayland", "x11", "links"] }
+# `glow` too: Oldric Suite builds WordCraft together with PdfCraft, whose OpenGL fallback turns
+# it on, and that changes `eframe::App::on_exit`. The renderer stays wgpu (`run`).
+eframe = { workspace = true, features = ["default_fonts", "wgpu", "glow", "accesskit", "wayland", "x11", "links"] }
 egui = { workspace = true }
 serde_json = { workspace = true }
 log = { workspace = true }

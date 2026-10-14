@@ -1,11 +1,11 @@
 [package]
 name = "pdfcraft-sign"
 description = "Digital signatures (ISO 32000-2 §12.8, PAdES): X.509, CMS, PKCS #12, signing and validation"
-version.workspace = true
+version = "0.7.1"
 edition.workspace = true
 license.workspace = true
-rust-version.workspace = true
-repository.workspace = true
+rust-version = "1.95"
+repository = "https://github.com/storytold/pdfcraft"
 
 [lints]
 workspace = true

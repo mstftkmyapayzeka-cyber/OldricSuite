@@ -1,7 +1,7 @@
 [package]
 name = "wordcraft-web"
 description = "WordCraft in the browser (eframe web runner, WebGPU with WebGL2 fallback)"
-version.workspace = true
+version = "0.6.1"
 edition.workspace = true
 license.workspace = true
 publish = false

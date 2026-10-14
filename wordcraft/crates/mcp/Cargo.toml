@@ -1,6 +1,6 @@
 [package]
 name = "wordcraft-mcp"
-version.workspace = true
+version = "0.6.1"
 edition.workspace = true
 license.workspace = true
 description = "WordCraft MCP server: every command as a tool, headless or bridged to the running app"

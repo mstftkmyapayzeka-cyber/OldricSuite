@@ -79,7 +79,17 @@ pub fn metadata() -> Result<serde_json::Value, String> {
     if !out.status.success() {
         return Err(format!("cargo metadata failed:\n{}", String::from_utf8_lossy(&out.stderr)));
     }
-    serde_json::from_slice(&out.stdout).map_err(|e| format!("cargo metadata: bad JSON: {e}"))
+    let meta = serde_json::from_slice(&out.stdout).map_err(|e| format!("cargo metadata: bad JSON: {e}"))?;
+    Ok(own_packages(meta, &root()))
+}
+
+/// Keep the packages of this project: in a larger workspace (Oldric Suite) `cargo metadata` lists
+/// the other projects' crates too, and their layering is theirs to check.
+fn own_packages(mut meta: serde_json::Value, root: &Path) -> serde_json::Value {
+    if let Some(pkgs) = meta["packages"].as_array_mut() {
+        pkgs.retain(|p| p["manifest_path"].as_str().is_none_or(|m| Path::new(m).starts_with(root)));
+    }
+    meta
 }
 
 fn cmd_layers() -> Result<(), String> {

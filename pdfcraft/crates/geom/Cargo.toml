@@ -1,7 +1,7 @@
 [package]
 name = "pdfcraft-geom"
 description = "Geometry primitives for PdfCraft (points, rects, page transforms)"
-version.workspace = true
+version = "0.7.1"
 edition.workspace = true
 license.workspace = true
 

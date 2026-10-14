@@ -1,11 +1,11 @@
 [package]
 name = "pdfcraft-optimize"
 description = "The PDF Optimizer: image downsampling and recompression, discarding objects, clean-up"
-version.workspace = true
+version = "0.7.1"
 edition.workspace = true
 license.workspace = true
-rust-version.workspace = true
-repository.workspace = true
+rust-version = "1.95"
+repository = "https://github.com/storytold/pdfcraft"
 
 [lints]
 workspace = true

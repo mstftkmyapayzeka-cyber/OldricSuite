@@ -146,7 +146,10 @@ mod tests {
 
     #[test]
     fn the_real_manifest_has_a_valid_version() {
-        let text = std::fs::read_to_string(crate::root().join("Cargo.toml")).unwrap();
+        // WordCraft's own workspace manifest, or the one a level up when WordCraft is part of a
+        // larger workspace (Oldric Suite).
+        let root = crate::root();
+        let text = std::fs::read_to_string(root.join("Cargo.toml")).or_else(|_| std::fs::read_to_string(root.join("../Cargo.toml"))).unwrap();
         validate(&read(&text).unwrap()).unwrap();
     }
 }

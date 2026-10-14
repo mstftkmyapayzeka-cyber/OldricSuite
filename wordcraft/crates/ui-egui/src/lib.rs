@@ -841,6 +841,22 @@ impl WordApp {
         saved
     }
 
+    /// The window title WordCraft last sent (`Report - WordCraft`).
+    pub fn window_title(&self) -> &str {
+        &self.sent_title
+    }
+
+    /// Another app drew in this window since WordCraft last did (Oldric Suite switches between
+    /// WordCraft and PdfCraft in one window): install WordCraft's fonts, theme, animation setting
+    /// and window title again, and skip drawing until the fonts are in.
+    pub fn reclaim_context(&mut self) {
+        self.styled = false;
+        self.fonts_frames = 0;
+        self.applied_theme = None;
+        self.applied_animations = None;
+        self.sent_title.clear();
+    }
+
     /// The window's close button (or the system) asked to quit. Returns true to let the window
     /// close; with unsaved changes it asks first and returns false.
     pub fn close_requested(&mut self) -> bool {

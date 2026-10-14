@@ -1,6 +1,6 @@
 [package]
 name = "wordcraft-docbin"
-version.workspace = true
+version = "0.6.1"
 edition.workspace = true
 license.workspace = true
 description = "WordCraft reader for the Word 97-2003 binary file format (.doc, [MS-DOC])"

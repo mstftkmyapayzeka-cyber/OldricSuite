@@ -1,7 +1,7 @@
 [package]
 name = "pdfcraft-platform"
 description = "Operating-system services shared by the PdfCraft desktop app and automation tools"
-version.workspace = true
+version = "0.7.1"
 edition.workspace = true
 license.workspace = true
 

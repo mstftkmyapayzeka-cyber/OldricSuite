@@ -1,0 +1,26 @@
+Oldric Suite
+Copyright (c) 2026 ArtCraft Team, the WordCraft and PdfCraft contributors, and the Oldric Suite
+contributors.
+Licensed under the MIT License or the Apache License, Version 2.0, at your option
+(LICENSE-MIT, LICENSE-APACHE).
+
+Oldric Suite combines two open-source projects by the ArtCraft Team, kept whole in their folders:
+
+- WordCraft (wordcraft/), a word processor. Its notices, including the third-party material it
+  bundles (fonts, hyphenation patterns), are in wordcraft/NOTICE and wordcraft/ATTRIBUTION.md.
+- PdfCraft (pdfcraft/), a PDF editor. Its notices, including the third-party material it bundles
+  (icons, fonts, the patched crates in pdfcraft/vendor/ and their required notices), are in
+  pdfcraft/NOTICE, pdfcraft/ATTRIBUTION.md and pdfcraft/vendor/README.md.
+
+Both are licensed under the MIT License or the Apache License, Version 2.0, like this repository.
+A program built from this repository (such as `oldric`) includes the material of both projects,
+so both NOTICE files apply to it.
+
+The ArtCraft name, wordmark and logos (wordcraft/docs/brand/, pdfcraft/docs/brand/) are
+trademarks of the ArtCraft Team. They are not open source, are not covered by the licenses above,
+and are not used as the name or mark of Oldric Suite; their terms are in docs/brand/LICENSE-brand.txt
+in each project's folder.
+
+The suite's own window icon and bar mark are drawn in code (apps/oldric/src/icon.rs, bar.rs) and
+are original work, MIT OR Apache-2.0. No Microsoft, Adobe, Avid or Autodesk icons, images,
+templates or artwork are included.

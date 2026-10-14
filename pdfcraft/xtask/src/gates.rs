@@ -43,7 +43,16 @@ fn metadata() -> anyhow::Result<serde_json::Value> {
     if !out.status.success() {
         bail!("cargo metadata failed:\n{}", String::from_utf8_lossy(&out.stderr));
     }
-    Ok(serde_json::from_slice(&out.stdout)?)
+    Ok(own_packages(serde_json::from_slice(&out.stdout)?, &root()))
+}
+
+/// Keep the packages of this project: in a larger workspace (Oldric Suite) `cargo metadata` lists
+/// the other projects' crates too, and their layering is theirs to check.
+fn own_packages(mut meta: serde_json::Value, root: &Path) -> serde_json::Value {
+    if let Some(pkgs) = meta["packages"].as_array_mut() {
+        pkgs.retain(|p| p["manifest_path"].as_str().is_none_or(|m| Path::new(m).starts_with(root)));
+    }
+    meta
 }
 
 pub fn layers(_: &[String]) -> anyhow::Result<()> {
@@ -302,8 +311,9 @@ mod tests {
     #[test]
     fn macos_bundle_id_matches_app_id() {
         assert!(read("packaging/macos/Info.plist.in").contains("<string>ai.storyteller.pdfcraft</string>"), "bundle id");
-        let main = read("apps/pdfcraft/src/main.rs");
-        assert!(main.contains(r#"const APP_ID: &str = "ai.storyteller.pdfcraft""#), "APP_ID drifted from the bundle id");
+        // The app is a library with a small `main.rs` (Oldric Suite embeds it).
+        let app = read("apps/pdfcraft/src/lib.rs");
+        assert!(app.contains(r#"const APP_ID: &str = "ai.storyteller.pdfcraft""#), "APP_ID drifted from the bundle id");
     }
 
     // Committed file with `<!-- -->` comments stripped, so a commented-out claim cannot pass.

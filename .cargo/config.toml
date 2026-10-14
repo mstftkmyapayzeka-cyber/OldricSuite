@@ -1,0 +1,4 @@
+[alias]
+# The two projects' own tools (checks, packaging, parity reports).
+xtask-word = "run --package wordcraft-xtask --"
+xtask-pdf = "run --package pdfcraft-xtask --"

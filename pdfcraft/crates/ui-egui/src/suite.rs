@@ -1,7 +1,8 @@
 //! The Craft suite: File ▸ Edit in WordCraft. The PDF is exported to Word (the same export as
 //! File ▸ Export to Word) and opened in WordCraft, the ArtCraft word processor, for editing.
 //! WordCraft's File ▸ Export ▸ Open in PdfCraft brings it back as a PDF that PdfCraft reloads
-//! whenever it changes (`file_watch`).
+//! whenever it changes (`file_watch`). Inside Oldric Suite, which shows both apps in one window,
+//! the Word document goes to the WordCraft beside PdfCraft instead ([`PdfCraftApp::word_host`]).
 //!
 //! The Word document is never written over an existing file: it gets a free name beside the PDF
 //! (`Report.docx`, `Report (2).docx`, …), or in the temporary folder for a PDF with no file.
@@ -44,13 +45,45 @@ impl PdfCraftApp {
         if let Err(e) = crate::editing::write_atomically(&path.to_string_lossy(), &bytes) {
             return self.notify_fmt("Couldn't write {name}: {e}", &[("name", &shown), ("e", &e.to_string())]);
         }
-        match launch(&path) {
+        let opened = match &self.word_host {
+            Some(open) => open(&path),
+            None => launch(&path),
+        };
+        match opened {
             Ok(()) => self.notify_fmt("Opened in WordCraft: {path}", &[("path", &shown)]),
             Err(e) => {
                 log::warn!("starting WordCraft for {shown}: {e}");
                 self.notify_fmt("WordCraft couldn't be started ({e}). The Word document is at {path}", &[("e", &e), ("path", &shown)]);
             }
         }
+    }
+}
+
+impl PdfCraftApp {
+    /// Show `path`: its tab if it is open, else open it. WordCraft's Open in PdfCraft asks again
+    /// for the PDF it keeps in sync, which must not open a second tab (Oldric Suite).
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn show_path(&mut self, path: &str) {
+        let open = self.views.iter().position(|view| self.session.get(view.id).is_some_and(|doc| doc.path.as_deref() == Some(path)));
+        match open {
+            Some(index) => self.active = Some(index),
+            None => self.open_path(path),
+        }
+    }
+
+    /// Whether closing the window now would stop to ask about unsaved changes.
+    pub fn quit_needs_answer(&self) -> bool {
+        !self.allow_quit && self.first_dirty().is_some()
+    }
+
+    /// Another app drew in this window since PdfCraft last did (Oldric Suite switches between
+    /// WordCraft and PdfCraft in one window): install PdfCraft's fonts, theme, interface size and
+    /// window title again, and skip drawing until the fonts are in.
+    pub fn reclaim_context(&mut self) {
+        self.styled = false;
+        self.fonts_ready = false;
+        self.ui_scale_applied = None;
+        self.window_title.clear();
     }
 }
 
@@ -155,6 +188,84 @@ mod tests {
         assert_eq!(pick(env.clone(), beside.clone(), path.clone(), all), env);
         assert_eq!(pick(None, beside.clone(), path.clone(), all), beside);
         assert_eq!(pick(None, None, path.clone(), |p| p == Path::new("/usr/bin/wordcraft")), path.first().cloned());
+    }
+
+    /// A one-page PDF in a fresh scratch folder.
+    fn scratch_pdf(name: &str) -> (PathBuf, String) {
+        let dir = std::env::temp_dir().join(format!("pdfcraft-suite-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let body = "BT /F1 24 Tf 20 150 Td (Suite) Tj ET";
+        let objects = [
+            "<< /Type /Catalog /Pages 2 0 R >>".to_string(),
+            "<< /Type /Pages /Kids [4 0 R] /Count 1 /MediaBox [0 0 200 300] >>".to_string(),
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>".to_string(),
+            "<< /Type /Page /Parent 2 0 R /Contents 5 0 R /Resources << /Font << /F1 3 0 R >> >> >>".to_string(),
+            format!("<< /Length {} >>\nstream\n{body}\nendstream", body.len()),
+        ];
+        let mut bytes = b"%PDF-1.7\n".to_vec();
+        let mut offsets = Vec::new();
+        for (index, object) in objects.iter().enumerate() {
+            offsets.push(bytes.len());
+            bytes.extend_from_slice(format!("{} 0 obj\n{object}\nendobj\n", index + 1).as_bytes());
+        }
+        let xref = bytes.len();
+        bytes.extend_from_slice(format!("xref\n0 {}\n0000000000 65535 f \n", objects.len() + 1).as_bytes());
+        for offset in offsets {
+            bytes.extend_from_slice(format!("{offset:010} 00000 n \n").as_bytes());
+        }
+        bytes.extend_from_slice(format!("trailer\n<< /Size {} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n", objects.len() + 1).as_bytes());
+        let path = dir.join(format!("{name}.pdf"));
+        std::fs::write(&path, bytes).unwrap();
+        (dir, path.to_string_lossy().into_owned())
+    }
+
+    #[test]
+    fn show_path_brings_an_open_document_forward_instead_of_opening_it_again() {
+        let (dir, a) = scratch_pdf("a");
+        let b = dir.join("b.pdf").to_string_lossy().into_owned();
+        std::fs::copy(&a, &b).unwrap();
+        let mut app = PdfCraftApp::new();
+        app.open_path(&a);
+        app.open_path(&b);
+        assert_eq!((app.views.len(), app.active), (2, Some(1)));
+        app.show_path(&a);
+        assert_eq!((app.views.len(), app.active), (2, Some(0)));
+        let c = dir.join("c.pdf").to_string_lossy().into_owned();
+        std::fs::copy(&a, &c).unwrap();
+        app.show_path(&c);
+        assert_eq!((app.views.len(), app.active), (3, Some(2)));
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn quitting_needs_an_answer_only_with_unsaved_work() {
+        let (dir, a) = scratch_pdf("quit");
+        let mut app = PdfCraftApp::new();
+        assert!(!app.quit_needs_answer());
+        app.open_path(&a);
+        assert!(!app.quit_needs_answer());
+        app.run_command("page.insert_blank");
+        assert!(app.quit_needs_answer());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn edit_in_wordcraft_hands_the_document_to_the_word_host() {
+        let (dir, a) = scratch_pdf("host");
+        let mut app = PdfCraftApp::new();
+        app.open_path(&a);
+        let handed = std::rc::Rc::new(std::cell::RefCell::new(Vec::new()));
+        let seen = handed.clone();
+        app.word_host = Some(Box::new(move |p: &Path| {
+            seen.borrow_mut().push(p.to_path_buf());
+            Ok(())
+        }));
+        app.edit_in_wordcraft();
+        let handed = handed.borrow();
+        assert_eq!(handed.as_slice(), &[dir.join("host.docx")]);
+        assert!(std::fs::read(dir.join("host.docx")).unwrap().starts_with(b"PK"), "a Word document was written");
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]

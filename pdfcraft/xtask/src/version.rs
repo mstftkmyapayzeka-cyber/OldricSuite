@@ -149,9 +149,15 @@ mod tests {
         assert!(replace(MANIFEST, "nope").is_err());
     }
 
+    /// The workspace manifest: PdfCraft's own, or the one a level up when PdfCraft is part of a
+    /// larger workspace (Oldric Suite).
+    fn workspace_manifest(root: &std::path::Path) -> String {
+        std::fs::read_to_string(root.join("Cargo.toml")).or_else(|_| std::fs::read_to_string(root.join("../Cargo.toml"))).unwrap()
+    }
+
     #[test]
     fn the_real_manifest_has_a_valid_version() {
-        let text = std::fs::read_to_string(crate::gates::root().join("Cargo.toml")).unwrap();
+        let text = workspace_manifest(&crate::gates::root());
         validate(&read(&text).unwrap()).unwrap();
     }
 
@@ -164,7 +170,7 @@ mod tests {
     #[test]
     fn workspace_rust_version_covers_the_ui_crate() {
         let root = crate::gates::root();
-        let workspace = std::fs::read_to_string(root.join("Cargo.toml")).unwrap();
+        let workspace = workspace_manifest(&root);
         let ui = std::fs::read_to_string(root.join("crates/ui-egui/Cargo.toml")).unwrap();
         assert!(minor_of_rust_version(&workspace) >= minor_of_rust_version(&ui));
     }

@@ -1,0 +1,33 @@
+[package]
+name = "oldric"
+description = "Oldric Suite: WordCraft and PdfCraft in one window"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+default-run = "oldric"
+
+[lints]
+workspace = true
+
+[dependencies]
+# The two apps, each wired to this computer the way its own program wires it.
+wordcraft = { path = "../../wordcraft/apps/wordcraft" }
+pdfcraft = { path = "../../pdfcraft/apps/pdfcraft" }
+wordcraft-ui-egui = { workspace = true }
+pdfcraft-ui-egui = { workspace = true }
+# wgpu draws, with PdfCraft's OpenGL fallback for GPUs and drivers wgpu can't start on.
+eframe = { workspace = true, features = ["default_fonts", "wgpu", "glow", "accesskit", "wayland", "x11", "persistence", "links"] }
+egui = { workspace = true }
+serde_json = { workspace = true }
+log = { workspace = true }
+
+[target.'cfg(all(unix, not(target_os = "macos")))'.dependencies]
+# Runs through XWayland where it can, for file drag-and-drop (see `main`); already in the build.
+winit = { version = "0.30", default-features = false, features = ["x11"] }
+
+[dev-dependencies]
+# Headless runs of the whole window (tests and `examples/shot.rs`).
+egui_kittest = { workspace = true, features = ["eframe", "wgpu"] }
+image = { version = "0.25", default-features = false, features = ["png"] }
